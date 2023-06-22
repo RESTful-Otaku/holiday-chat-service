@@ -22,7 +22,7 @@ struct Message {
 
 #[post("/message", format = "json", data = "<message>")]
 fn message(message: Json<Message>, state: State<AppState>) -> content::Plain<String> {
-    // ... your message handling logic here ...
+    // TODO: message handling logic goes here 
 }
 
 #[launch]

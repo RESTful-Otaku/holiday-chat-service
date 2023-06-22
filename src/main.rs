@@ -1,39 +1,35 @@
+#![feature(proc_macro_hygiene, decl_macro)]
+
 #[macro_use] extern crate rocket;
 
 use rocket::State;
-use rocket::response::content;
-use rocket::serde::json::Json;
 use rocket_cors::{AllowedOrigins, CorsOptions};
 
 mod models;
 mod filter;
+mod message;
+mod read_hotels;
 
 use models::Hotel;
 use filter::Filter;
+use message::message;
+use read_hotels::read_hotels;
 
 struct AppState {
-    hotels: Vec<Hotel>,
+  hotels: Vec<Hotel>,
 }
 
-#[derive(Deserialize)]
-struct Message {
-    message: String,
-}
+fn main() {
+  let hotels = read_hotels().unwrap();
 
-#[post("/message", format = "json", data = "<message>")]
-fn message(message: Json<Message>, state: State<AppState>) -> content::Plain<String> {
-    // TODO: message handling logic goes here 
-}
+  let cors = CorsOptions::default()
+      .allowed_origins(AllowedOrigins::all())
+      .allow_credentials(true)
+      .to_cors().unwrap();
 
-#[launch]
-fn rocket() -> _ {
-    let cors = CorsOptions::default()
-        .allowed_origins(AllowedOrigins::all())
-        .allow_credentials(true)
-        .to_cors().unwrap();
-
-    rocket::build()
-        .mount("/", routes![message])
-        .attach(cors)
-        .manage(AppState { hotels: read_hotels().unwrap() })
+  rocket::ignite()
+      .mount("/", routes![message])
+      .attach(cors)
+      .manage(AppState { hotels })
+      .launch();
 }
